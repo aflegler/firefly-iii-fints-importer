@@ -11,7 +11,7 @@ function Setup()
 
     if (isset($_GET['config'])) {
         $filename = basename($_GET['config']);
-        $requested_config_file = 'data/configurations/' . $filename;
+        $requested_config_file = '/app/configurations'.DIRECTORY_SEPARATOR.$filename;
         if (!file_exists($requested_config_file)) {
             echo $twig->render(
                 'error.twig',
