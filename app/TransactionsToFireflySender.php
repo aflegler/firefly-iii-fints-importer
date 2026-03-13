@@ -135,23 +135,45 @@ class TransactionsToFireflySender
     public function send_transactions()
     {
         $result = array();
+
         foreach ($this->transactions as $transaction) {
             $request = new PostTransactionRequest($this->firefly_url, $this->firefly_access_token);
 
-            $request->setBody(
-                self::transform_transaction_to_firefly_request_body($transaction, $this->firefly_account_id, $this->firefly_accounts, $this->regex_match, $this->regex_replace)
+            $body = self::transform_transaction_to_firefly_request_body(
+                $transaction, 
+                $this->firefly_account_id, 
+                $this->firefly_accounts, 
+                $this->regex_match, 
+                $this->regex_replace
             );
 
-            $response = $request->post();
-            if ($response instanceof ValidationErrorResponse) {
-                $errors   = $response->errors->all();
-                $errors[] = "Firefly III request: " . json_encode($request->getBody());
-                $errors[] = "Transaction data: " . print_r($transaction, true);
-                $result[] = array('transaction' => $transaction, 'messages' => $errors);
-            } else if ($response instanceof PostTransactionResponse) {
-                //everything went fine :)
-            } else {
-                throw new \Exception('Import went wrong');
+            $request->setBody($body);
+
+            try {
+                $response = $request->post();
+                
+                if ($response instanceof ValidationErrorResponse) {
+                    $errors = $response->errors->all();
+                    $errors[] = "Firefly III request: " . json_encode($request->getBody());
+                    $result[] = ['transaction' => $transaction, 'messages' => $errors];
+                }
+            } catch (\Throwable $e) {
+                // Check for specific Firefly III error: transaction deleted by rule immediately after creation
+                if (strpos($e->getMessage(), '200032') !== false) {
+                    $result[] = [
+                        'transaction' => $transaction,
+                        'messages' => ['Transaction imported but immediately deleted by a Firefly rule (Code 200032).']
+                    ];
+                    continue;
+                } else {
+                    // Handle other critical errors without breaking the whole import loop
+                    Logger::error("Import error: " . $e->getMessage());
+                    $result[] = [
+                        'transaction' => $transaction,
+                        'messages' => ['Import failed: ' . $e->getMessage()]
+                    ];
+                    continue;
+                }
             }
         }
         return $result;
