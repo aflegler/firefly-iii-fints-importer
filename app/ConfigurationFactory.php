@@ -14,13 +14,13 @@ class Configuration {
     public $firefly_url;
     public $firefly_access_token;
     public $skip_transaction_review;
-    public $bank_account_iban;
-    public $firefly_account_id;
-    public $choose_account_from;
-    public $choose_account_to;
-    public $description_regex_match;
-    public $description_regex_replace;
-    public $force_mt940;
+    public $bank_account_iban = null;
+    public $firefly_account_id = null;
+    public $choose_account_from = null;
+    public $choose_account_to = null;
+    public $description_regex_match = null;
+    public $description_regex_replace = null;
+    public $force_mt940 = false;
 }
 
 class ConfigurationFactory
