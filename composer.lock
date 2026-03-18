@@ -171,18 +171,18 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/JC5/api-support-classes.git",
-                "reference": "be6c45c58696e2c8d3eb0da89f178614bbbaaba5"
+                "reference": "5bae8352ed7efc0111a6a8e4a4e806a831b5997c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/JC5/api-support-classes/zipball/be6c45c58696e2c8d3eb0da89f178614bbbaaba5",
-                "reference": "be6c45c58696e2c8d3eb0da89f178614bbbaaba5",
+                "url": "https://api.github.com/repos/JC5/api-support-classes/zipball/5bae8352ed7efc0111a6a8e4a4e806a831b5997c",
+                "reference": "5bae8352ed7efc0111a6a8e4a4e806a831b5997c",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "guzzlehttp/guzzle": "^7",
-                "illuminate/support": "^11|^12",
+                "illuminate/support": "^12|^13",
                 "php": ">=8.3"
             },
             "require-dev": {
@@ -270,7 +270,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2025-12-06T06:14:08+00:00"
+            "time": "2026-03-18T10:42:49+00:00"
         },
         {
             "name": "genkgo/camt",
@@ -4946,5 +4946,5 @@
         "ext-json": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
