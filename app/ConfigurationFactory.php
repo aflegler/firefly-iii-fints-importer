@@ -1,7 +1,7 @@
 <?php
 
-
 namespace App;
+use JsonSchema\Validator;
 
 class Configuration {
     public $bank_username;
@@ -34,40 +34,31 @@ class ConfigurationFactory
         }
 
         $jsonFileContent = file_get_contents($fileName);
-        
-        // Debug: check file size
-        Logger::debug("Read " . strlen($jsonFileContent) . " bytes from configuration file.");
+        $data = json_decode($jsonFileContent);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception("Invalid JSON: " . json_last_error_msg());
+        }
+
+        // json validator
+        $validator = new Validator();
+        $schemaPath = 'file://' . realpath(__DIR__ . '/resources/schema.json');
+
+        $validator->validate($data, (object)['$ref' => $schemaPath]);
+
+        if (!$validator->isValid()) {
+            $errorMsg = "JSON does not validate. Errors:\n";
+            foreach ($validator->getErrors() as $error) {
+                $errorMsg .= sprintf("[%s] %s\n", $error['property'], $error['message']);
+            }
+            throw new \Exception($errorMsg);
+        }
 
         $contentArray = json_decode($jsonFileContent, true);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $errorMsg = json_last_error_msg();
-            Logger::error("JSON Syntax Error: $errorMsg");
-            throw new \Exception("The JSON file is malformed. Technical error: '$errorMsg'. Please check for missing commas or quotes.");
-        }
-
-        // validate Required Fields
-        $requiredFields = [
-            "bank_username",
-            "bank_password",
-            "bank_url",
-            "bank_code", 
-            "firefly_url",
-            "firefly_access_token",
-            "skip_transaction_review"
-        ];
-
-        foreach ($requiredFields as $field) {
-            if (!isset($contentArray[$field]) || $contentArray[$field] === '') {
-                throw new \Exception("Required field '$field' is missing in your configuration file. Please add it to proceed.");
-            }
-        }
-
         $configuration = new Configuration();
-        
-        $configuration->bank_url = $contentArray["bank_url"];
-        $configuration->bank_code = $contentArray["bank_code"];
-
+        $configuration->bank_url                = $contentArray["bank_url"];
+        $configuration->bank_code               = $contentArray["bank_code"];
         $configuration->bank_username           = $contentArray["bank_username"];
         $configuration->bank_password           = $contentArray["bank_password"];
         $configuration->bank_2fa                = $contentArray["bank_2fa"] ?? null;
@@ -87,8 +78,10 @@ class ConfigurationFactory
             $configuration->choose_account_from = $automation["from"] ?? null;
             $configuration->choose_account_to   = $automation["to"] ?? null;
         }
-        $configuration->description_regex_match   = $contentArray["description_regex_match"];
-        $configuration->description_regex_replace = $contentArray["description_regex_replace"];
+        
+        $configuration->description_regex_match   = $contentArray["description_regex_match"] ?? null;
+        $configuration->description_regex_replace = $contentArray["description_regex_replace"] ?? null;
+        
         $configuration->force_mt940               = filter_var($contentArray["force_mt940"] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         return $configuration;
