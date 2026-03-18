@@ -137,27 +137,28 @@ class TransactionsToFireflySender
 
     public function send_transactions()
     {
-        $result = array();
         foreach ($this->transactions as $transaction) {
             $request = new PostTransactionRequest($this->firefly_url, $this->firefly_access_token);
-
             $request->setBody(
                 self::transform_transaction_to_firefly_request_body($transaction, $this->firefly_account_id, $this->firefly_accounts, $this->regex_match, $this->regex_replace)
             );
 
-            $response = $request->post();
-            if ($response instanceof ValidationErrorResponse) {
-                $errors   = $response->errors->all();
-                $errors[] = "Firefly III request: " . json_encode($request->getBody());
-                $errors[] = "Transaction data: " . print_r($transaction, true);
-                $result[] = array('transaction' => $transaction, 'messages' => $errors);
-            } else if ($response instanceof PostTransactionResponse) {
-                //everything went fine :)
-            } else {
-                throw new \Exception('Import went wrong');
+            // DEBUG POINT 1
+            // echo "Sende an API..."; 
+
+            try {
+                $response = $request->post();
+            } catch (\Throwable $t) {
+                // Wenn die Library selbst crasht, fangen wir das hier ab!
+                var_dump(get_class($t), $t->getMessage(), $t->getFile(), $t->getLine());
+                exit; 
             }
+
+            // DEBUG POINT 2
+            echo "Antwort erhalten: ";
+            var_dump($response);
+            exit; // Hier stoppen wir sofort, um die Ausgabe im Browser zu sehen!
         }
-        return $result;
     }
 
     private $transactions;
